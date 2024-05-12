@@ -27,6 +27,8 @@ class AdminController extends Controller
             'password'=>'required|min:8|confirmed',
             'role_id'=>'required|numeric',
             'image'=> 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
+            'position'=>'numeric|exists:countries,id',
+            'phone_number'=>'regex:/[0-9]{10}/|unique:users'
         ]);
         try{
             $role=Role::where('id',$request->role_id)->first();
@@ -38,29 +40,16 @@ class AdminController extends Controller
         $admin =new User;
 
         if($request->hasFile('image')){
-        /*
-         $image = $request->file('image');
-         $image_name=time() . '.' . $image->getClientOriginalExtension();
-         Storage::putFileAs('ProfileImage/',$image,$image_name);
-         $admin->query()->update([
-            'image'=>"ProfileImage/$image_name"
-          ]);
-        */
             $image = $request->file('image');
             $image_name=time() . '.' . $image->getClientOriginalExtension();
-            $image->move('ProfileImage/',$image_name);
-       /*
-         Storage::putFileAs('ProfileImage/',$image,$image_name);
-           $user->query()->update([
-                'image'=>"ProfileImage/$image_name"
-            ]);
-        */
             $admin->image="ProfileImage/".$image_name;
         }
 
         $admin->name=$registerAdminData['name'];
         $admin->email=$registerAdminData['email'];
         $admin->password= Hash::make($registerAdminData['password']);
+        $admin->phone_number=$registerAdminData['phone_number'] ?? null;
+        $admin->position=$registerAdminData['position'] ?? null;
         $admin->assignRole($role->name);
         // if($request->has('role')){
         //     $admin->assignRole($request->role);
@@ -73,6 +62,7 @@ class AdminController extends Controller
             'id'=> $admin->id,
             'name'=> $admin->name,
             'email'=> $admin->email,
+            'phone_number'=>$admin->phone_number,
             'image'=> $admin->image,
             'position'=>$admin->position,
             'is_approved'=>$admin->is_approved,
@@ -124,9 +114,10 @@ class AdminController extends Controller
 
 
         $data=[
-            'id'=>$admin->id,
-            'name'=>$admin->name,
+            'id'=> $admin->id,
+            'name'=> $admin->name,
             'email'=> $admin->email,
+            'phone_number'=>$admin->phone_number,
             'image'=> $admin->image,
             'position'=>$admin->position,
             'role'=> $admin->roles->pluck('name'),
@@ -134,6 +125,42 @@ class AdminController extends Controller
 
         return response()->json([
             'data'=>$data,
+        ],200);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'=>'required|string',
+            'position'=>'numeric|exists:countries,id',
+            'phone_number'=>'regex:/[0-9]{10}/|unique:users'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                'message'=> $validator->errors()->first(),
+            ],422);
+        }
+
+        $admin=User::findOrFail(auth()->user()->id);
+
+        $admin->phone_number=$request['phone_number'] ??null;
+        $admin->position=$request['position'] ?? null;
+        $admin->name=$request['name'] ?? null;
+        $admin->save();
+
+        $data=[
+            'id'=> $admin->id,
+            'name'=> $admin->name,
+            'email'=> $admin->email,
+            'phone_number'=>$admin->phone_number,
+            'image'=> $admin->image,
+            'position'=>$admin->position,
+        ];
+
+        return response()->json([
+            'message'=> 'updated successfully',
+            'data'=>$data
         ],200);
     }
 

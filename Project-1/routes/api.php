@@ -140,9 +140,7 @@ Route::group(['middleware'=>['auth:sanctum','role:Super Admin|Trip manger|Hotel 
             Route::get('get-admis-for-role/{id}','getAdmisForRole');
             Route::post('delete-profile-photo','deleteProfilePhoto');
             Route::post('approve-user','approveUser');
-                    //put api in postman
-
-            Route::post('change-name','changeName');
+            Route::post('update-profile','updateProfile');
         });
 
 

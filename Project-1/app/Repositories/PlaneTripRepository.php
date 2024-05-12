@@ -42,7 +42,9 @@ class PlaneTripRepository implements PlaneTripRepositoryInterface
 
     public function getAllTripForCountry($data)
     {
-        return PlaneTrip::getTripDetails()->where('country_destination_id',$data['country_destination_id'])
+        return PlaneTrip::getTripDetails()
+                        ->where('country_source_id',$data['country_source_id'])
+                        ->where('country_destination_id',$data['country_destination_id'])
                         ->where('flight_date','>=',$data['flight_date'])
                         ->get();
 

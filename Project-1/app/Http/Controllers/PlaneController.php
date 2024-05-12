@@ -258,6 +258,7 @@ class PlaneController extends Controller
             'data'=>$trips
         ],200);
     }
+    
     public function getAllPlaneTrip(Request $request):JsonResponse
     {
         $trips=PlaneTrip::getTripDetails()->with('plane.airport:id,name')->get();
@@ -266,6 +267,7 @@ class PlaneController extends Controller
         ],200);
 
     }
+
     public function showPlaneTripDetails($id):JsonResponse
     {
         try{

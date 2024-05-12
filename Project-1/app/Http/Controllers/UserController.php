@@ -22,39 +22,23 @@ class UserController extends Controller
             'email'=>'required|string|email|unique:users',
             'password'=>'required|min:8|confirmed',
             'image'=> 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
-            'position'=>'numeric|exists:countries,id'
+            'position'=>'numeric|exists:countries,id',
+            'phone_number'=>'regex:/[0-9]{10}/|unique:users'
         ]);
-
-        /*
-
-         $user = User::query()->create([
-            'name' => $registerUserData['name'],
-            'email' => $registerUserData['email'],
-            'password' => Hash::make($registerUserData['password']),
-        ]);
-         */
         $user=new User;
         if($request->hasFile('image')){
 
             $image = $request->file('image');
             $image_name=time() . '.' . $image->getClientOriginalExtension();
             $image->move('ProfileImage/',$image_name);
-         /*
-           Storage::putFileAs('ProfileImage/',$image,$image_name);
-           $user->query()->update([
-                'image'=>"ProfileImage/$image_name"
-            ]);
-            */
             $user->image="ProfileImage/".$image_name;
         }
 
         $user->name=$registerUserData['name'];
         $user->email=$registerUserData['email'];
         $user->password= Hash::make($registerUserData['password']);
-
-        if($request->has('position')){
-            $user->position=$registerUserData['position'];
-        }
+        $user->phone_number=$registerUserData['phone_number'] ?? null;
+        $user->position=$registerUserData['position'] ?? null;
 
         ###################
         $user->assignRole('User');
@@ -75,11 +59,14 @@ class UserController extends Controller
 
         //Mail::to($registerUserData['email'])->send(new ConfirmationEmail($confdeatiles));
         $all=[
-            'name'=>$user['name'],
-            'email'=>$user['email'],
+            'id'=> $user->id,
+            'name'=> $user->name,
+            'email'=> $user->email,
+            'phone_number'=>$user->phone_number,
+            'image'=> $user->image,
+            'position'=>$user->position,
             'token'=> $token,
             'code'=>$registerUserData['code'],
-            'position'=>$user->position
         ];
         return response()->json([
             // 'data'=>[
@@ -203,14 +190,16 @@ class UserController extends Controller
         $user=auth()->user();
 
         $data=[
-            'id'=>$user->id,
-            'name'=>$user->name,
+            'id'=> $user->id,
+            'name'=> $user->name,
             'email'=> $user->email,
+            'phone_number'=>$user->phone_number,
             'image'=> $user->image,
+            'position'=>$user->position,
         ];
 
         return response()->json([
-            'data'=>$user,
+            'data'=>$data,
         ],200);
     }
 
@@ -248,24 +237,12 @@ class UserController extends Controller
 
     }
 
-    public function changeName(Request $request){
-        $data=$request->validate([
-            'name'=> 'required|string'
-        ]);
-        $user=User::find(auth()->user()->id);
-        $user->name=$data['name'];
-        $user->save();
-
-        return response()->json([
-            'message'=> 'name updated successfully'
-        ],200);
-
-    }
-
-    public function updateProfile(Request $request){
+    public function updateProfile(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'name'=>'string',
-            'position'=>'numeric|exists:countries,id'
+            'name'=>'required|string',
+            'position'=>'numeric|exists:countries,id',
+            'phone_number'=>'regex:/[0-9]{10}/|unique:users'
         ]);
 
         if($validator->fails()){
@@ -276,16 +253,23 @@ class UserController extends Controller
 
         $user=User::findOrFail(auth()->user()->id);
 
-        $user->name=$request->name;
-        if($request->has('position')){
-            $user->position=$request->position;
-        }
-
+        $user->phone_number=$request['phone_number'] ??null;
+        $user->position=$request['position'] ?? null;
+        $user->name=$request['name'] ?? null;
         $user->save();
+
+        $data=[
+            'id'=> $user->id,
+            'name'=> $user->name,
+            'email'=> $user->email,
+            'phone_number'=>$user->phone_number,
+            'image'=> $user->image,
+            'position'=>$user->position,
+        ];
 
         return response()->json([
             'message'=> 'updated successfully',
-            'data'=>$user
+            'data'=>$data
         ],200);
     }
 
