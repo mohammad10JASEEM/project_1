@@ -19,6 +19,7 @@ class AirportController extends Controller
     {
         $this->middleware('role:Admin|Airport admin', ['only'=> ['store','update','updateExistAirportImage','addAirportImage']]);
         $this->middleware('role:Super Admin|Admin|Airport admin', ['only'=> ['getAirportDetails']]);
+        $this->middleware('Airport admin', ['only'=> ['getMyAirport','destroy']]);
     }
 
     public function getMyAirport()

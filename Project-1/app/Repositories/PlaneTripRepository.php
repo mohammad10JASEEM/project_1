@@ -1,15 +1,12 @@
 <?php
 
 namespace App\Repositories;
-
-use App\Helpers\ImageProcess;
 use App\Models\Airport;
-use App\Models\AirportImage;
 use App\Models\Plane;
 use App\Models\PlaneTrip;
 use App\Repositories\Interfaces\PlaneTripRepositoryInterface;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+
 
 class PlaneTripRepository implements PlaneTripRepositoryInterface
 {
@@ -42,7 +39,10 @@ class PlaneTripRepository implements PlaneTripRepositoryInterface
 
     public function getAllTripForCountry($data)
     {
-        return PlaneTrip::getTripDetails()
+
+        return PlaneTrip::whereHas('plane',function (Builder $query) {
+                             $query->where('visible',true)->select('id','name');
+                        })->with(['plane:id,name','country_source:id,name','country_destination:id,name','airport_source:id,name','airport_destination:id,name'])
                         ->where('country_source_id',$data['country_source_id'])
                         ->where('country_destination_id',$data['country_destination_id'])
                         ->where('flight_date','>=',$data['flight_date'])

@@ -258,7 +258,7 @@ class PlaneController extends Controller
             'data'=>$trips
         ],200);
     }
-    
+
     public function getAllPlaneTrip(Request $request):JsonResponse
     {
         $trips=PlaneTrip::getTripDetails()->with('plane.airport:id,name')->get();
@@ -292,4 +292,25 @@ class PlaneController extends Controller
         ],200);
 
     }
+
+    public function changeVisible(Request $request){
+        $validator = Validator::make($request->all(), [
+            'plane_id'=>'required|numeric|exists:planes,id',
+        ]);
+        if( $validator->fails() ){
+            return response()->json([
+                'message'=> $validator->errors()->first(),
+            ],422);
+        }
+
+        $plane=Plane::findOrFail($request->id);
+        $plane['visible']=$request->visible;
+        $plane->save();
+        return response()->json([
+            'data'=>$plane
+        ],200);
+
+    }
+
+
 }

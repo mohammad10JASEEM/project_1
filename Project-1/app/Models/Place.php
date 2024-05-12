@@ -23,7 +23,7 @@ class Place extends Model
     {
         return $this->BelongsToMany(Category::class,'place_categories');
     }
-    
+
     public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class,'area_id');
